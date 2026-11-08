@@ -292,9 +292,9 @@
     }).join("");
     // table
     const t = $("#nbTable");
-    t.innerHTML = `<thead><tr><th>Valsts</th><th>Vēlēšanu mēnesis</th><th>„Valdība izveidota” nozīmē</th><th class="n">→ valdība, mediāna d.</th><th class="n">→ budžets, mediāna d.</th><th>Budžets pirms 1. janvāra</th><th>Galvenais noteikums</th></tr></thead><tbody>${NB_ALL.map(n => {
+    t.innerHTML = `<colgroup><col style="width:14%"><col style="width:24%"><col style="width:11.5%"><col style="width:11.5%"><col style="width:11%"><col style="width:28%"></colgroup><thead><tr><th>Valsts,<br>vēlēšanu<br>mēnesis</th><th>„Valdība<br>izveidota”<br>nozīmē</th><th class="n">Vēlēšanas<br>→ valdība,<br>mediāna d.</th><th class="n">Vēlēšanas<br>→ budžets,<br>mediāna d.</th><th>Budžets<br>pirms<br>1. janvāra</th><th>Galvenais<br>noteikums</th></tr></thead><tbody>${NB_ALL.map(n => {
       const bj = n.cycles.filter(c => pd(c.budget) < pd(`${c.budgetYear}-01-01`)).length;
-      return `<tr><td><b>${esc(n.name)}</b>${n.isLV ? "<br><span style='color:var(--muted);white-space:nowrap'>pēdējie 3 cikli</span>" : ""}</td><td>${esc(n.electMonth)}</td><td>${esc(n.govDef)}</td><td class="n">${median(n.cycles.map(c => c.dGov))}</td><td class="n">${median(n.cycles.map(c => c.dBud))}</td><td><span class="pill ${bj === 3 ? "ok" : bj === 0 ? "no" : ""}">${bj} no 3</span></td><td style="font-size:12.5px">${esc(n.ruleShort)} <a href="${n.ruleSrc}" target="_blank" rel="noopener">↗</a></td></tr>`;
+      return `<tr><td><b>${esc(n.name)}</b><span class="sub">${esc(n.electMonth)}</span>${n.isLV ? "<span class='sub'>pēdējie 3 cikli</span>" : ""}</td><td class="txt">${esc(n.govDef)}</td><td class="n">${median(n.cycles.map(c => c.dGov))}</td><td class="n">${median(n.cycles.map(c => c.dBud))}</td><td><span class="pill ${bj === 3 ? "ok" : bj === 0 ? "no" : ""}">${bj} no 3</span></td><td class="txt">${esc(n.ruleShort)} <a href="${n.ruleSrc}" target="_blank" rel="noopener">avots ↗</a></td></tr>`;
     }).join("")}</tbody>`;
   }
 
