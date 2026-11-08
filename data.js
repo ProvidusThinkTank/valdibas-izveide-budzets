@@ -54,7 +54,7 @@ window.PDATA = (function () {
     positions: [
       { who: "Edvards Smiltēns (Saeimas priekšsēdētājs) un ekonomists Edgars Voļskis", view: "Budžets jāpieņem līdz Ziemassvētkiem — gadu nevajadzētu sākt ar pagaidu budžetu.", budget: "2026-12-23", label: "Līdz Ziemassvētkiem", src: "https://www.lsm.lv/raksts/zinas/latvija/06.11.2026-valdibas-veidosana-budzetu-nekave-bet-par-ta-pienemsanas-laiku-vienpratibas-nav.a670842/" },
       { who: "Finanšu ministrs Māris Kučinskis", view: "Reālistiskāk — janvāra beigas vai februāris: pilnam ciklam (EK saskaņošana, divi lasījumi) vajag ap diviem mēnešiem; pensijām un algām riska nav.", budget: "2027-01-29", label: "Janvāra beigas", src: "https://www.lsm.lv/raksts/zinas/latvija/06.11.2026-valdibas-veidosana-budzetu-nekave-bet-par-ta-pienemsanas-laiku-vienpratibas-nav.a670842/" },
-      { who: "Vēsturiskais salīdzinājums (2019 un 2023)", view: "Abās pēdējās reizēs, kad valdība tapa ilgāk par 2 mēnešiem, budžets tika pieņemts martā–aprīlī.", budget: "2027-03-10", label: "Marta sākums", src: "https://likumi.lv/ta/id/340143" }
+      { who: "Vēsturiskais salīdzinājums (2019 un 2023)", view: "Abās pēdējās reizēs, kad valdība tapa ilgāk par 2 mēnešiem, budžets tika pieņemts martā–aprīlī.", budget: "2027-03-10", label: "Marta sākums", srcs: [{ label: "2019. g. budžeta likums (03.04.2019.)", url: "https://likumi.lv/ta/id/306232" }, { label: "2023. g. budžeta likums (09.03.2023.)", url: "https://likumi.lv/ta/id/340396" }] }
     ]
   };
 

@@ -138,7 +138,7 @@
     if ($("#vesture").classList.contains("on")) renderGantt();
   }
   function renderPositions() {
-    $("#positions").innerHTML = D.LV2026.positions.map((p, i) => `<div class="p"><div class="who">${esc(p.who)}</div><div class="v">${esc(p.view)} <a href="${p.src}" target="_blank" rel="noopener">avots ↗</a></div><button class="btn" type="button" data-pos="${i}">Izmēģināt: ${esc(p.label)} (${fmt(p.budget)})</button></div>`).join("");
+    $("#positions").innerHTML = D.LV2026.positions.map((p, i) => `<div class="p"><div class="who">${esc(p.who)}</div><div class="v">${esc(p.view)} ${p.srcs ? p.srcs.map(x => `<a href="${x.url}" target="_blank" rel="noopener">${esc(x.label)} ↗</a>`).join(" · ") : `<a href="${p.src}" target="_blank" rel="noopener">avots ↗</a>`}</div><button class="btn" type="button" data-pos="${i}">Izmēģināt: ${esc(p.label)} (${fmt(p.budget)})</button></div>`).join("");
     $$("#positions [data-pos]").forEach(bt => bt.addEventListener("click", () => { setBud(D.LV2026.positions[+bt.dataset.pos].budget); }));
   }
   const BUD_PRESETS = [
