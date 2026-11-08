@@ -1,7 +1,7 @@
 /* Providus — Pēc vēlēšanām: valdība un budžets. Vanilla JS, bez ārējām bibliotēkām. */
 (function () {
   "use strict";
-  const D = window.PDATA, R = window.RDATA;
+  const D = window.PDATA;
   const $ = (s, el) => (el || document).querySelector(s);
   const $$ = (s, el) => Array.from((el || document).querySelectorAll(s));
   const MS = 86400000;
@@ -52,7 +52,7 @@
     tabs.forEach(t => t.setAttribute("aria-selected", String(t.getAttribute("aria-controls") === id)));
     panels.forEach(p => { const on = p.id === id; p.classList.toggle("on", on); p.hidden = !on; });
     hideTip();
-    requestAnimationFrame(() => { if (id === "vesture") renderGantt(); if (id === "rezultati") renderTrend(); if (id === "kaimini") renderNeighbours(); });
+    requestAnimationFrame(() => { if (id === "vesture") renderGantt(); if (id === "kaimini") renderNeighbours(); });
   }
   tabs.forEach(t => t.addEventListener("click", () => selectTab(t.getAttribute("aria-controls"))));
   $(".tablist").addEventListener("keydown", e => {
@@ -129,12 +129,14 @@
       if (beforeJan) { const bj = LV.filter(c => c.beforeJan), gmin = Math.min(...bj.map(c => c.dGov)), gmax = Math.max(...bj.map(c => c.dGov)), bmin = Math.min(...bj.map(c => c.dG2B)), bmax = Math.max(...bj.map(c => c.dG2B)); html += `<div class="verdict ok"><b>Budžets pirms budžeta gada sākuma.</b> Tā kopš 1993. gada ir noticis ${nBefore} reizes no 10 (${bj.map(c => c.year).join(", ")}). Visos šajos gadījumos valdība bija apstiprināta ${gmin}–${gmax} dienās pēc vēlēšanām, un no uzticības balsojuma līdz budžetam pagāja ${bmin}–${bmax} dienas; tavā scenārijā — ${dG} un ${dG2B}. Ātra valdība pati par sevi to negarantē: 2002. gadā valdība tapa 33 dienās, bet budžetu pieņēma tikai 28.02.2003.</div>`; }
       else html += `<div class="verdict warn"><b>2027. gads sāktos ar pagaidu budžetu</b> (budžets ${days(JAN27, b)} d. pēc 1. janvāra). Tā bijis ${10 - nBefore} reizes no 10 — pēdējoreiz 2019. (03.04.) un 2023. gadā (09.03.). Pagaidu budžets turpina iepriekšējā gada politiku: pensijas, pabalsti, algas un parāda maksājumi tiek veikti, bet jaunas iniciatīvas un investīcijas gaida.</div>`;
     }
+    html += `<div class="debate"><div class="dlabel">Ko par to saka debatēs (06.11.2026)</div><div class="pos" id="positions"></div></div>`;
     html += `<ul class="rules">
       <li><span class="i ${pd(g) <= pd("2026-11-19") ? "ok" : "no"}">${pd(g) <= pd("2026-11-19") ? "✓" : "!"}</span><div><b>Finanšu ministrijas atskaites punkts (~19.11.2026):</b> ja līdz tam nav uzticības jaunam Ministru kabinetam, FM sāk gatavot pagaidu budžetu 2027. gadam. Tavā scenārijā uzticība — ${fmt(g)}.</div></li>
       <li><span class="i info">§</span><div><b>LBFV 21. panta 3. daļa:</b> vēlēšanu gadā budžeta projekts Saeimā jāiesniedz ne vēlāk kā 4 mēnešus pēc uzticības balsojuma — šajā scenārijā līdz <b>${fmt(deadline4m)}</b>. Tas ir likumā noteiktais maksimums, nevis plānotais termiņš.</div></li>
       <li><span class="i info">2</span><div><b>Saeimas procedūra:</b> budžetu pieņem divos lasījumos; 2006–2014, kad valdība tapa ~mēneša laikā, no valdības līdz budžetam pagāja 42–51 diena. FM vērtējumā pilnam ciklam (t. sk. saskaņošana ar Eiropas Komisiju) vajag ap diviem mēnešiem.</div></li>
     </ul>`;
     out.innerHTML = html;
+    renderPositions();
     if ($("#vesture").classList.contains("on")) renderGantt();
   }
   function renderPositions() {
@@ -238,86 +240,20 @@
   const tstate = { key: "year", dir: 1 };
   function renderTable() {
     const cols = [
-      { k: "s", l: "Saeima", f: r => r.isOpen ? "15." : `${r.s}.` },
-      { k: "elect", l: "Vēlēšanas", f: r => r.electStart && r.electStart !== r.elect ? `${fmt(r.electStart).slice(0, 5)}–${fmt(r.elect)}` : fmt(r.elect) },
-      { k: "pm", l: "Pirmā valdība", f: r => r.isOpen ? `<span class="pill open">vēl nav</span>` : `<span style="white-space:nowrap">${esc(r.pm)}</span><br><span style="color:var(--muted)">${fmt(r.gov)}</span>` },
-      { k: "dGov", l: "→ valdība, d.", n: true, f: r => r.isOpen ? `<span style="color:var(--now)">${sinceElect}+</span>` : r.dGov },
-      { k: "coalition", l: "Koalīcija", f: r => r.isOpen ? "sarunas turpinās" : `${esc(r.coalition)}<br><span style="color:var(--muted);white-space:nowrap">${r.parties} partijas · ${r.seats} mandāti · ${r.majority ? "vairākums" : "mazākums"}</span>` },
-      { k: "budget", l: "Budžets pieņemts", f: r => r.isOpen ? `<span class="pill open">2027. g. — nav</span>` : `<span style="white-space:nowrap">${fmt(r.budget)}</span> <span class="pill ${r.beforeJan ? "ok" : "no"}">${r.beforeJan ? "pirms 1.I" : "pēc 1.I"}</span>` },
-      { k: "dG2B", l: "valdība → budžets, d.", n: true, f: r => r.isOpen ? "—" : r.dG2B },
-      { k: "dBud", l: "→ budžets, d.", n: true, f: r => r.isOpen ? "—" : r.dBud },
-      { k: "src", l: "Avoti", f: r => r.isOpen ? `<span class="src"><a href="${D.SOURCES_2026[0].u}" target="_blank" rel="noopener">MK ↗</a><a href="${D.SOURCES_2026[1].u}" target="_blank" rel="noopener">LSM ↗</a></span>` : `<span class="src"><a href="${r.src.gov}" target="_blank" rel="noopener" title="Valdības datuma avots">valdība ↗</a><a href="${r.src.budget}" target="_blank" rel="noopener" title="Budžeta datuma avots">budžets ↗</a><a href="${r.src.elect}" target="_blank" rel="noopener" title="Vēlēšanu avots">CVK ↗</a></span>` }
+      { k: "s", l: "Saeima,<br>vēlēšanas", w: "10%", f: r => r.isOpen ? `<b>15.</b><span class="sub">${fmt(r.elect)}</span>` : `<b>${r.s}.</b><span class="sub">${r.electStart && r.electStart !== r.elect ? `${fmt(r.electStart).slice(0, 5)}–${fmt(r.elect)}` : fmt(r.elect)}</span>` },
+      { k: "pm", l: "Pirmā valdība,<br>uzticības<br>balsojums", w: "16%", f: r => r.isOpen ? `<span class="pill open">vēl nav</span>` : `${esc(r.pm)}<span class="sub">${fmt(r.gov)}</span>` },
+      { k: "dGov", l: "Vēlēšanas<br>→ valdība,<br>dienas", n: true, w: "11%", f: r => r.isOpen ? `<span style="color:var(--now)">${sinceElect}+</span>` : r.dGov },
+      { k: "coalition", l: "Koalīcija", w: "18%", f: r => r.isOpen ? "sarunas turpinās" : `${esc(r.coalition)}<span class="sub">${r.parties} partijas · ${r.seats} mandāti · ${r.majority ? "vairākums" : "mazākums"}</span>` },
+      { k: "budget", l: "Budžets<br>pieņemts", w: "12%", f: r => r.isOpen ? `<span class="pill open">2027. g. — nav</span>` : `${fmt(r.budget)}<span class="sub"><span class="pill ${r.beforeJan ? "ok" : "no"}">${r.beforeJan ? "pirms 1.I" : "pēc 1.I"}</span></span>` },
+      { k: "dG2B", l: "Valdība<br>→ budžets,<br>dienas", n: true, w: "11%", f: r => r.isOpen ? "—" : r.dG2B },
+      { k: "dBud", l: "Vēlēšanas<br>→ budžets,<br>dienas", n: true, w: "11%", f: r => r.isOpen ? "—" : r.dBud },
+      { k: "src", l: "Avoti", w: "11%", f: r => r.isOpen ? `<span class="src"><a href="${D.SOURCES_2026[0].u}" target="_blank" rel="noopener">MK ↗</a><a href="${D.SOURCES_2026[1].u}" target="_blank" rel="noopener">LSM ↗</a></span>` : `<span class="src"><a href="${r.src.gov}" target="_blank" rel="noopener" title="Valdības datuma avots">valdība ↗</a><a href="${r.src.budget}" target="_blank" rel="noopener" title="Budžeta datuma avots">budžets ↗</a><a href="${r.src.elect}" target="_blank" rel="noopener" title="Vēlēšanu avots">CVK ↗</a></span>` }
     ];
     const rows = [...LV].sort((a, b) => { const va = a[tstate.key], vb = b[tstate.key]; return (va > vb ? 1 : va < vb ? -1 : 0) * tstate.dir; });
     rows.push({ isOpen: true, s: 15, elect: E26, year: 2026 });
     const t = $("#lvTable");
-    t.innerHTML = `<thead><tr>${cols.map(c => `<th class="${c.n ? "n" : ""}">${c.k === "src" ? c.l : `<button type="button" data-k="${c.k}" aria-sort="${tstate.key === c.k ? (tstate.dir > 0 ? "ascending" : "descending") : "none"}">${c.l}</button>`}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${cols.map(c => `<td class="${c.n ? "n" : ""}">${c.f(r)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+    t.innerHTML = `<colgroup>${cols.map(c => `<col style="width:${c.w}">`).join("")}</colgroup><thead><tr>${cols.map(c => `<th class="${c.n ? "n" : ""}">${c.k === "src" ? c.l : `<button type="button" data-k="${c.k}" aria-sort="${tstate.key === c.k ? (tstate.dir > 0 ? "ascending" : "descending") : "none"}">${c.l}</button>`}</th>`).join("")}</tr></thead><tbody>${rows.map(r => `<tr>${cols.map(c => `<td class="${c.n ? "n" : ""}">${c.f(r)}</td>`).join("")}</tr>`).join("")}</tbody>`;
     $$("th button", t).forEach(b => b.addEventListener("click", () => { const k = b.dataset.k; if (tstate.key === k) tstate.dir *= -1; else { tstate.key = k; tstate.dir = 1; } renderTable(); }));
-  }
-
-  /* ===== 3. REZULTĀTI ===== */
-  const rstate = { s: 15 };
-  const SAEIMAS = R.stats.map(s => ({ s: s.s, y: s.y }));
-  function threshold(s) { return s <= 4 ? null : s === 5 ? 4 : 5; }
-  function renderSaeimaChips() {
-    $("#saeimaChips").innerHTML = SAEIMAS.map(x => `<button type="button" class="chip" data-s="${x.s}" aria-pressed="${String(x.s === rstate.s)}">${x.y}<span class="sr-only"> (${x.s}. Saeima)</span></button>`).join("");
-    $$("#saeimaChips .chip").forEach(c => c.addEventListener("click", () => { rstate.s = +c.dataset.s; $$("#saeimaChips .chip").forEach(x => x.setAttribute("aria-pressed", String(x === c))); renderResults(); }));
-  }
-  function renderResults() {
-    const s = rstate.s, st = R.stats.find(x => x.s === s), rows = R.results.filter(r => r.s === s).sort((a, b) => (b.pct || 0) - (a.pct || 0));
-    const coal = R.coalitions.filter(c => c.s === s), coalNames = new Set(coal.map(c => c.p));
-    const lvRow = LV.find(c => c.s === s);
-    const th = threshold(s);
-    const main = rows.filter(r => r.m > 0 || (r.pct || 0) >= 2), rest = rows.filter(r => !main.includes(r));
-    const restPct = rest.reduce((a, r) => a + (r.pct || 0), 0);
-    const max = Math.max(...rows.map(r => r.pct || 0), 10);
-    $("#resTitle").textContent = `${s}. Saeima · ${st.y}. gads`;
-    $("#resBars").innerHTML = main.map((r, i) => `<div class="bar"><div class="nm ${coalNames.has(r.p) ? "coal" : ""}" title="${esc(r.p)}">${esc(r.p)}</div><div class="tr">${th ? `<span class="th" style="left:${(th / max) * 100}%"></span>` : ""}<div class="fl ${r.m > 0 ? "in" : ""} ${coalNames.has(r.p) ? "coal" : ""}" style="width:0" data-w="${((r.pct || 0) / max) * 100}"></div></div><div class="vals">${r.pct == null ? "—" : r.pct.toFixed(2).replace(".", ",") + " %"}<br><small>${r.m > 0 ? r.m + " mand." : "0 mand."}</small></div></div>`).join("") +
-      (rest.length ? `<div class="bar"><div class="nm" style="color:var(--muted)">Pārējie ${rest.length} saraksti kopā</div><div class="tr"><div class="fl" style="width:0" data-w="${(restPct / max) * 100}"></div></div><div class="vals" style="color:var(--muted)">${restPct.toFixed(2).replace(".", ",")} %<br><small>0 mand.</small></div></div>` : "");
-    requestAnimationFrame(() => $$("#resBars .fl").forEach(f => { f.style.width = f.dataset.w + "%"; }));
-    $("#resNote").textContent = th ? `Vēlēšanu barjera: ${th} %. ${st.note || ""}` : `Vēlēšanu barjeras nebija (1922–1931). ${st.note || ""}`;
-    const f = (v, d) => v == null ? "—" : v.toLocaleString("lv-LV", { maximumFractionDigits: d == null ? 2 : d });
-    $("#resFacts").innerHTML = [
-      { l: "Vēlētāju aktivitāte", v: st.turnout == null ? "—" : f(st.turnout) + "<small> %</small>" },
-      { l: "Nobalsoja", v: st.voters ? f(st.voters, 0) : "—" },
-      { l: "Pieteikti saraksti", v: st.lists }, { l: "Ieguva mandātus", v: st.winners },
-      { l: "Uzvarētājs", v: `<span style="font-size:14px;line-height:1.3;display:block">${esc(st.winner)}</span>` }, { l: "Uzvarētāja rezultāts", v: f(st.winnerPct) + "<small> %</small>" }
-    ].map(x => `<div class="fact"><div class="l">${x.l}</div><div class="v">${x.v}</div></div>`).join("");
-    if (lvRow) $("#resCoal").innerHTML = `<b>Pirmā valdība pēc vēlēšanām:</b> ${esc(lvRow.pm)} (uzticība ${fmt(lvRow.gov)}, ${lvRow.dGov} d. pēc vēlēšanām). Koalīcija: ${coal.map(c => `${esc(c.abbr || c.p)} (${c.m})`).join(", ")} — kopā ${lvRow.seats} mandāti, ${lvRow.majority ? "vairākums" : "mazākums"}. ${coal.find(c => c.note) ? esc(coal.find(c => c.note).note) : ""}`;
-    else if (s === 15) $("#resCoal").innerHTML = `<b>Pirmā valdība pēc vēlēšanām:</b> vēl nav apstiprināta (stāvoklis ${fmt(TODAY)}). Valdības veidošana uzticēta Andrim Kulbergam (AS); sarunas galvenokārt ar NA un JV. Rezultāti — CVK provizoriskie dati (05.10.2026).`;
-    else $("#resCoal").innerHTML = `Valdību un budžetu termiņu salīdzinājums rīkā aptver 1993.–2026. gadu.`;
-  }
-  const trstate = { key: "turnout" };
-  $("#trendSel").addEventListener("change", e => { trstate.key = e.target.value; renderTrend(); });
-  function renderTrend() {
-    const host = $("#trend"); const W = Math.max(320, host.clientWidth || 800), H = 260, L = 44, Rm = 16, T = 18, B = 40;
-    const data = R.stats.map(s => ({ y: s.y, s: s.s, v: s[trstate.key] })).filter(d => d.v != null);
-    const isPct = trstate.key === "turnout" || trstate.key === "winnerPct";
-    const maxV = isPct ? 100 : Math.ceil(Math.max(...data.map(d => d.v)) / 5) * 5, minV = 0;
-    const GAP = 1.6, n = R.stats.length + GAP, slot = i => i < 4 ? i : i + GAP, xi = i => L + (slot(i) + .5) * ((W - L - Rm) / n), yv = v => T + (1 - (v - minV) / (maxV - minV)) * (H - T - B);
-    const svg = svgEl("svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": "Tendences pa vēlēšanu gadiem" });
-    const gy = isPct ? [0, 25, 50, 75, 100] : Array.from({ length: 6 }, (_, i) => Math.round(maxV / 5 * i));
-    gy.forEach(v => { svgEl("line", { x1: L, x2: W - Rm, y1: yv(v), y2: yv(v), stroke: "#e6e2db" }, svg); svgEl("text", { x: L - 8, y: yv(v) + 4, "text-anchor": "end", "font-size": 11, fill: "#9a948b" }, svg).textContent = v; });
-    // gap shading between index 3 and 4
-    const gx1 = xi(3), gx2 = xi(4), gw = (W - L - Rm) / n;
-    svgEl("rect", { x: gx1 + gw * .55, y: T, width: gx2 - gx1 - gw * 1.1, height: H - T - B, fill: "#edeae4" }, svg);
-    svgEl("text", { x: (gx1 + gx2) / 2, y: H - B - 18, "text-anchor": "middle", "font-size": 10.5, fill: "#736d64", "font-weight": 600 }, svg).textContent = "1934–1993";
-    svgEl("text", { x: (gx1 + gx2) / 2, y: H - B - 6, "text-anchor": "middle", "font-size": 10.5, fill: "#736d64" }, svg).textContent = "vēlēšanu nebija";
-    const idx = s => R.stats.findIndex(x => x.s === s);
-    const segs = [data.filter(d => d.s <= 4), data.filter(d => d.s >= 5)];
-    segs.forEach(seg => { if (seg.length < 2) return; const p = svgEl("path", { d: seg.map((d, i) => `${i ? "L" : "M"}${xi(idx(d.s))},${yv(d.v)}`).join(" "), fill: "none", stroke: "#262b73", "stroke-width": 2.5, "stroke-linejoin": "round" }, svg); if (!reduced) { const len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.strokeDashoffset = len; requestAnimationFrame(() => { p.style.transition = "stroke-dashoffset 1s cubic-bezier(.2,.7,.2,1)"; p.style.strokeDashoffset = 0; }); } });
-    data.forEach(d => {
-      const cx = xi(idx(d.s)), cy = yv(d.v), last = d.s === 15;
-      const c = svgEl("circle", { cx, cy, r: last ? 6 : 4.5, fill: last ? "#b33f62" : "#fff", stroke: last ? "#b33f62" : "#262b73", "stroke-width": 2.5, tabindex: 0, role: "img", "aria-label": `${d.y}: ${d.v}` }, svg);
-      svgEl("text", { x: cx, y: cy - 10, "text-anchor": "middle", "font-size": 11, fill: "#4a4845", "font-weight": 700 }, svg).textContent = isPct ? d.v.toFixed(1).replace(".", ",") : d.v;
-      svgEl("text", { x: cx, y: H - B + 18, "text-anchor": "middle", "font-size": 11, fill: "#736d64" }, svg).textContent = d.y;
-      const st = R.stats.find(x => x.s === d.s);
-      const html = `<b>${d.s}. Saeima · ${d.y}</b><br>Aktivitāte ${st.turnout == null ? "—" : st.turnout.toFixed(2).replace(".", ",") + " %"} · saraksti ${st.lists} · mandātus ieguva ${st.winners}<br><span class="m">Uzvarētājs: ${esc(st.winner)} — ${st.winnerPct.toFixed(2).replace(".", ",")} %</span>`;
-      c.addEventListener("mousemove", e => showTip(html, e.clientX, e.clientY)); c.addEventListener("mouseleave", hideTip);
-      c.addEventListener("focus", () => { const b = c.getBoundingClientRect(); showTip(html, b.left, b.top); }); c.addEventListener("blur", hideTip);
-      c.addEventListener("click", () => { rstate.s = d.s; $$("#saeimaChips .chip").forEach(x => x.setAttribute("aria-pressed", String(+x.dataset.s === d.s))); renderResults(); });
-    });
-    host.innerHTML = ""; host.appendChild(svg);
   }
 
   /* ===== 4. KAIMIŅVALSTIS ===== */
@@ -372,7 +308,7 @@
       ["Mediāna", "Vidējā vērtība sakārtotā rindā — to mazāk ietekmē ekstrēmi gadījumi (1993: 242 d.; 2018: 109 d. līdz valdībai) nekā vidējo aritmētisko."],
       ["Pirms / pēc 1. janvāra", "Vai budžets pieņemts pirms budžeta gada sākuma. Ja nē, Latvijā darbojas pagaidu budžets (LBFV 15. pants): finanšu ministrs apstiprina izdevumus iepriekšējā gada līmenī bez jaunām iniciatīvām."],
       ["2026. gada scenārijs", "Lietotāja izvēlēti datumi, nevis prognoze. Tie tiek salīdzināti ar 10 iepriekšējiem cikliem; rīks nevērtē, kurš variants ir „pareizs”."],
-      ["Vēlēšanu rezultāti", "CVK dati; 2026. gada rezultāti — provizoriskie (05.10.2026). Koalīcijas partijas sasaistītas ar pirmo valdību pēc vēlēšanām; sadalītu sarakstu gadījumā norādīts vēlēšanu saraksts."],
+      ["Vēlēšanu rezultāti", "Saeimas vēlēšanu rezultāti 1922–2026 (CVK dati) ir atsevišķā Providus vizualizācijā; koalīcijas partijas tajā sasaistītas ar pirmo valdību pēc vēlēšanām."],
       ["Ierobežojumi", "Kaimiņvalstīm aptverti tikai trīs pēdējie cikli; vēlēšanu mēneši atšķiras (marts–oktobris), tāpēc „dienas līdz budžetam” nav tieši salīdzināmas ar laiku līdz 1. janvārim. Lietuvā un Polijā budžeta projektu bieži iesniedz vēl iepriekšējā valdība."],
       ["Atjaunināšana", `Dati pārbaudīti ${fmt(D.UPDATED)}. „Šodien” tiek rēķināts no pārlūka datuma; to var fiksēt ar parametru ?date=GGGG-MM-DD.`]
     ];
@@ -387,10 +323,9 @@
   }
   $("#dlLV").addEventListener("click", () => dl("latvija_valdibas_budzeti_1993_2026.csv", [["Saeima", "Vēlēšanu gads", "Vēlēšanu beigu diena", "Pirmā valdība", "Uzticības balsojums", "Budžeta gads", "Budžets pieņemts", "Vēlēšanas→valdība, d.", "Valdība→budžets, d.", "Vēlēšanas→budžets, d.", "Pirms 1. janvāra", "Koalīcija", "Partiju skaits", "Mandāti", "Vairākums", "Avots valdība", "Avots budžets"], ...LV.map(c => [c.s, c.year, c.elect, c.pm, c.gov, c.budgetYear, c.budget, c.dGov, c.dG2B, c.dBud, c.beforeJan ? "jā" : "nē", c.coalition, c.parties, c.seats, c.majority ? "vairākums" : "mazākums", c.src.gov, c.src.budget]), [15, 2026, E26, "", "", 2027, "", "", "", "", "process turpinās", "", "", "", "", D.SOURCES_2026[0].u, ""]]));
   $("#dlNB").addEventListener("click", () => dl("kaiminvalstis_valdibas_budzeti.csv", [["Valsts", "Vēlēšanu gads", "Vēlēšanu diena", "Valdība (definīcija)", "Premjers", "Valdība izveidota", "Budžeta gads", "Budžets pieņemts", "Vēlēšanas→valdība, d.", "Valdība→budžets, d.", "Vēlēšanas→budžets, d.", "Piezīme", "Avots valdība", "Avots budžets"], ...NB_ALL.flatMap(n => n.cycles.map(c => [n.name, c.year, c.elect, n.govDef, c.pm, c.gov, c.budgetYear, c.budget, c.dGov, c.dG2B, c.dBud, c.note || c.electNote || "", c.src.gov, c.src.budget]))]));
-  $("#dlRes").addEventListener("click", () => dl("saeimas_velesanu_rezultati_1922_2026.csv", [["Saeima", "Gads", "Saraksts", "Balsis %", "Mandāti", "Balsis"], ...R.results.map(r => [r.s, r.y, r.p, r.pct, r.m, r.v])]));
 
   /* Init */
-  renderKPIs(); renderSteps(); renderBudChips(); renderPositions(); renderScenario();
-  renderTable(); renderSaeimaChips(); renderResults(); renderMethod();
-  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if ($("#vesture").classList.contains("on")) renderGantt(); if ($("#rezultati").classList.contains("on")) renderTrend(); }, 150); });
+  renderKPIs(); renderSteps(); renderBudChips(); renderScenario();
+  renderTable(); renderMethod();
+  let rt; window.addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(() => { if ($("#vesture").classList.contains("on")) renderGantt(); }, 150); });
 })();
