@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<link rel="icon" href="data:,">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pēc vēlēšanām: valdība un budžets — Providus interaktīvs rīks</title>
+<meta name="description" content="Interaktīvs rīks: cik ilgi Latvijā pēc Saeimas vēlēšanām top valdība un nākamā gada budžets (1993–2026), vēlēšanu rezultāti kopš 1922. gada un salīdzinājums ar Lietuvu, Igauniju, Somiju, Zviedriju un Poliju.">
+<style>
+/* Providus mājaslapas fonti (tie paši faili, ko lieto providus.lv) */
+@font-face{font-family:"Museo";font-weight:300;font-display:swap;src:url(fonts/MuseoCyrl300.woff2) format("woff2")}
+@font-face{font-family:"Museo";font-weight:700;font-display:swap;src:url(fonts/MuseoCyrl700.woff2) format("woff2")}
+@font-face{font-family:"Museo Sans";font-weight:300;font-display:swap;src:url(fonts/MuseoSansCyrl300.woff2) format("woff2")}
+@font-face{font-family:"Museo Sans";font-weight:700;font-display:swap;src:url(fonts/MuseoSansCyrl700.woff2) format("woff2")}
+
+:root{
+  /* Providus krāsas (providus.lv tēma + PPT paraugs) */
+  --bg:#f3f1ed; --surface:#ffffff; --surface-2:#f8f7f4; --line:#e4e0d9; --line-2:#cfc9bf;
+  --ink:#333231; --ink-2:#4a4845; --muted:#736d64; --faint:#9a948b;
+  --indigo:#262b73; --indigo-2:#1e225c; --indigo-l:#303a92; --navy:#251e50;
+  --sky:#b1e5f2; --cyan:#49adc4; --beige:#90887d; --beige-2:#7a7268; --green:#69995d;
+  --gov:#262b73; --gov-2:#1e225c; --gov-soft:#e3e5f1; --gov-text:#262b73;
+  --bud:#49adc4; --bud-2:#2a7a90; --bud-soft:#ddf1f7; --bud-text:#1f6a7e;
+  --now:#b33f62; --now-soft:#f5e3e9; --now-text:#8f324e;
+  --grey:#c1bcb5; --grey-soft:#ebe8e3;
+  --radius:0; --radius-sm:0;
+  --serif:"Museo",Georgia,"Times New Roman",serif;
+  --sans:"Museo Sans",Verdana,"Segoe UI",sans-serif;
+  --font:var(--sans);
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-weight:300;font-size:15.5px;line-height:1.55;-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1}
+b,strong,th,.tab,.btn,.chip,label{font-weight:700}
+a{color:var(--indigo);text-decoration:none;border-bottom:1px solid rgba(38,43,115,.3);transition:border-color .2s var(--ease)}
+a:hover{border-bottom-color:currentColor}
+button{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--serif);font-weight:700;color:var(--indigo)}
+.num{font-variant-numeric:tabular-nums}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.wrap{max-width:1140px;margin:0 auto;padding-left:clamp(16px,3vw,30px);padding-right:clamp(16px,3vw,30px)}
+.main{padding-top:24px;padding-bottom:56px}
+
+/* ===== Galvene (indigo josla ar PPT ģeometrisko motīvu) ===== */
+.hero{position:relative;background:var(--indigo);color:#fff;overflow:hidden}
+.hero-art{position:absolute;inset:0 0 0 auto;width:min(58%,720px);pointer-events:none}
+.hero-art svg{position:absolute;right:0;top:0;height:100%;width:100%}
+.hero-in{position:relative;z-index:1;padding-top:26px;padding-bottom:30px;max-width:1140px}
+.hero-top{display:flex;align-items:center;gap:18px;margin-bottom:26px}
+.logo{border:0;display:inline-flex}
+.logo img{display:block;height:42px;width:auto}
+.kicker{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:var(--sky);padding-left:18px;border-left:1px solid rgba(255,255,255,.35);line-height:1}
+.embed .logo{display:none}.embed .kicker{padding-left:0;border-left:0}
+.hero h1{margin:0 0 12px;font-size:clamp(26px,3.6vw,40px);line-height:1.12;color:#fff;max-width:17em}
+.hero-lead{margin:0;max-width:62ch;font-size:15.5px;line-height:1.55;color:rgba(255,255,255,.88)}
+.stamp{margin-top:18px;display:inline-flex;align-items:center;gap:10px;font-size:12.5px;color:rgba(255,255,255,.75)}
+.stamp b{color:#fff}
+.stamp .sep{width:4px;height:4px;background:var(--sky);display:inline-block}
+@media (max-width:760px){
+  .hero-art{width:46%;opacity:.55}
+  .hero-in{padding-top:20px;padding-bottom:22px}
+  .hero-top{margin-bottom:18px;gap:12px}
+  .logo img{height:34px}
+  .kicker{font-size:10.5px;letter-spacing:.16em;padding-left:12px}
+}
+
+/* ===== Cilnes — kā providus.lv navigācija ===== */
+.tabs{position:sticky;top:0;z-index:5;background:var(--navy);border-top:1px solid rgba(255,255,255,.12)}
+.tablist{display:flex;gap:0;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tablist::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;border:0;border-top:3px solid transparent;background:transparent;padding:14px 18px 15px;font-size:12px;line-height:1;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7);cursor:pointer;white-space:nowrap;transition:color .2s var(--ease),background .2s var(--ease)}
+.tab:first-child{padding-left:0}
+.tab:hover{color:#fff}
+.tab[aria-selected="true"]{color:#fff;border-top-color:var(--sky)}
+.tab:focus-visible{outline:2px solid var(--sky);outline-offset:-4px}
+.panel{display:none;animation:fade .35s var(--ease)}
+.panel.on{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:760px){.tab{padding:12px 14px 13px;font-size:11px;letter-spacing:.1em}}
+
+/* ===== Kartītes un režģis ===== */
+.card{background:var(--surface);padding:24px 26px}
+.card + .card{margin-top:18px}
+.grid > .card + .card{margin-top:0}
+.card h2{margin:0 0 6px;font-size:21px;line-height:1.25}
+.card h3{margin:20px 0 8px;font-size:15px;font-family:var(--sans);color:var(--ink);letter-spacing:.02em}
+.lead{margin:0 0 16px;color:var(--ink-2);max-width:78ch}
+.grid{display:grid;gap:18px}
+.grid.kpi{grid-template-columns:repeat(4,1fr)}
+.grid.two{grid-template-columns:1fr 1fr}
+.grid.three{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.grid.kpi{grid-template-columns:1fr 1fr}.grid.three{grid-template-columns:1fr 1fr}}
+@media (max-width:640px){.grid.two,.grid.three{grid-template-columns:1fr}.card{padding:18px 16px}.grid{gap:12px}}
+@media (max-width:420px){.grid.kpi{grid-template-columns:1fr 1fr}}
+
+.kpi .card{padding:16px 18px 18px;position:relative;border-top:4px solid var(--acc,var(--gov))}
+.kpi .lbl{font-size:11px;color:var(--beige);font-weight:700;letter-spacing:.12em;text-transform:uppercase;line-height:1.35}
+.kpi .val{font-family:var(--serif);font-size:clamp(30px,3.6vw,42px);font-weight:700;color:var(--indigo);line-height:1.05;margin:8px 0 4px}
+.kpi .val small{font-family:var(--sans);font-size:13px;font-weight:700;color:var(--muted);margin-left:5px}
+.kpi .sub{font-size:12.5px;color:var(--muted);line-height:1.4}
+
+/* Soļi */
+.steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+@media (max-width:900px){.steps{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:560px){.steps{grid-template-columns:repeat(2,1fr)}}
+.step{position:relative;padding:12px 12px 12px 16px;background:var(--surface-2);border:1px solid var(--line)}
+.step .dot{position:absolute;left:-1px;top:-1px;bottom:-1px;width:4px;background:var(--gov)}
+.step.todo .dot{background:var(--grey)}
+.step.todo{background:repeating-linear-gradient(135deg,#fff 0 6px,var(--bg) 6px 12px)}
+.step .d{font-family:var(--serif);font-weight:700;font-size:15px;color:var(--indigo)}
+.step.todo .d{color:var(--muted)}
+.step .t{font-size:12.5px;color:var(--ink);line-height:1.35;margin-top:3px}
+.step .h{font-size:11.5px;color:var(--muted);margin-top:5px}
+
+/* Scenārijs */
+.scen{display:grid;grid-template-columns:minmax(260px,340px) 1fr;gap:22px}
+@media (max-width:860px){.scen{grid-template-columns:1fr}}
+.ctl{display:flex;flex-direction:column;gap:16px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--beige);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.field .hint{font-size:12px;color:var(--muted);margin-top:5px}
+input[type=date],select{font:inherit;font-weight:300;padding:9px 10px;border:1px solid var(--line-2);background:#fff;color:var(--ink);width:100%;border-radius:0}
+input[type=date]:focus-visible,select:focus-visible,.chip:focus-visible,.btn:focus-visible,.seg button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-2);background:#fff;padding:7px 12px;font-size:13px;cursor:pointer;color:var(--ink);transition:all .2s var(--ease)}
+.chip:hover{border-color:var(--indigo);color:var(--indigo)}
+.chip[aria-pressed="true"]{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.chip.bud[aria-pressed="true"]{background:var(--bud-text);border-color:var(--bud-text)}
+.out{display:flex;flex-direction:column;gap:12px}
+.metric{padding:14px 16px;border:1px solid var(--line);background:var(--surface-2)}
+.metric .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.metric .name{font-weight:700;font-size:13.5px}
+.metric .big{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--indigo)}
+.metric .big small{font-family:var(--sans);font-size:13px;color:var(--muted);font-weight:700;margin-left:3px}
+.metric .cmp{font-size:12.5px;color:var(--muted)}
+.strip{width:100%;height:58px;display:block;margin-top:4px}
+.verdict{padding:12px 16px;font-size:13.5px;line-height:1.45;border-left:4px solid var(--line)}
+.verdict.ok{background:var(--gov-soft);border-color:var(--indigo);color:var(--indigo-2)}
+.verdict.warn{background:var(--bud-soft);border-color:var(--cyan);color:var(--bud-text)}
+.verdict.bad{background:var(--now-soft);border-color:var(--now);color:var(--now-text)}
+.rules{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.rules li{display:flex;gap:10px;font-size:13px;color:var(--ink-2)}
+.rules li b{color:var(--ink)}
+.rules li .i{flex:0 0 22px;height:22px;display:grid;place-items:center;font-size:12px;font-weight:700}
+.i.ok{background:var(--gov-soft);color:var(--indigo)}.i.no{background:var(--now-soft);color:var(--now)}.i.info{background:var(--grey-soft);color:var(--muted)}
+.pos{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:860px){.pos{grid-template-columns:1fr}}
+.pos .p{padding:14px;border:1px solid var(--line);background:#fff;display:flex;flex-direction:column;gap:8px}
+.pos .who{font-size:11px;font-weight:700;color:var(--beige);text-transform:uppercase;letter-spacing:.12em}
+.pos .v{font-size:13.5px;color:var(--ink-2);flex:1}
+.btn{border:1px solid var(--beige);background:var(--beige);color:#fff;padding:9px 16px;font-size:13px;cursor:pointer;transition:all .2s var(--ease);align-self:flex-start}
+.btn:hover{background:var(--indigo);border-color:var(--indigo);color:#fff}
+.btn.primary{background:var(--indigo);border-color:var(--indigo)}
+.btn.primary:hover{background:var(--indigo-2);border-color:var(--indigo-2)}
+
+/* Rīkjosla */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;margin:8px 0 14px}
+.seg{display:inline-flex;border:1px solid var(--line-2);background:#fff}
+.seg button{border:0;background:transparent;padding:7px 13px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer}
+.seg button + button{border-left:1px solid var(--line-2)}
+.seg button[aria-pressed="true"]{background:var(--indigo);color:#fff}
+.toolbar label{font-size:13px;color:var(--muted);display:inline-flex;align-items:center;gap:8px;font-weight:300}
+.toolbar select{width:auto;padding:6px 28px 6px 10px;font-size:13px}
+.toolbar input[type=checkbox]{accent-color:var(--indigo)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);margin:6px 0 2px}
+.legend i{display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:6px}
+.chart{width:100%;display:block;overflow:visible}
+.chart text{font-family:var(--sans)}
+.gantt-row{cursor:pointer}
+.gantt-row:focus{outline:none}
+.gantt-row:focus .rowbg,.gantt-row:hover .rowbg{fill:rgba(38,43,115,.06)}
+.tip{position:fixed;z-index:50;max-width:320px;background:var(--navy);color:#fff;padding:10px 12px;font-size:12.5px;line-height:1.45;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .15s var(--ease),transform .15s var(--ease);box-shadow:0 10px 30px -10px rgba(0,0,0,.4)}
+.tip.on{opacity:1;transform:none}
+.tip b{color:#fff}.tip .m{color:#c4c5d1}
+.tip .gv{color:#aeb6ea}.tip .bd{color:#9fdcec}
+
+/* Tabula */
+.tbl-wrap{overflow-x:auto;margin-top:8px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:980px}
+#nbTable{min-width:0;table-layout:auto}
+#nbTable td{white-space:normal}
+#nbTable th{white-space:normal}
+@media (max-width:760px){#nbTable{min-width:760px}}
+th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--beige);background:var(--surface-2);position:sticky;top:0;white-space:nowrap}
+th button{border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:0;text-transform:inherit;letter-spacing:inherit;font-weight:700}
+th button:hover{color:var(--indigo)}
+th button[aria-sort]::after{content:" ↕";opacity:.5}
+th button[aria-sort="ascending"]::after{content:" ↑";opacity:1}
+th button[aria-sort="descending"]::after{content:" ↓";opacity:1}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th.n{text-align:right}
+tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+.pill{display:inline-block;padding:2px 8px;font-size:11.5px;font-weight:700}
+.pill.ok{background:var(--gov-soft);color:var(--indigo)}.pill.no{background:var(--bud-soft);color:var(--bud-text)}.pill.open{background:var(--now-soft);color:var(--now-text)}
+.src a{font-size:12px;margin-right:6px;white-space:nowrap}
+
+/* Rezultāti */
+.res-layout{display:grid;grid-template-columns:1fr 300px;gap:22px}
+@media (max-width:900px){.res-layout{grid-template-columns:1fr}}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fact{padding:10px 12px;border:1px solid var(--line);background:var(--surface-2)}
+.fact .l{font-size:11px;color:var(--beige);font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.fact .v{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--indigo);margin-top:2px}
+.fact .v small{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);margin-top:10px}
+.bars{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.bar{display:grid;grid-template-columns:minmax(120px,38%) 1fr 92px;align-items:center;gap:10px;font-size:13px}
+.bar .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .nm.coal::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cyan);margin-right:6px;vertical-align:1px}
+.bar .tr{position:relative;height:18px;background:var(--grey-soft);overflow:visible}
+.bar .fl{position:absolute;left:0;top:0;bottom:0;background:var(--grey);transition:width .6s var(--ease)}
+.bar .fl.in{background:var(--indigo)}
+.bar .fl.coal{box-shadow:inset 0 0 0 2px var(--cyan)}
+.bar .th{position:absolute;top:-4px;bottom:-4px;width:0;border-left:2px dashed var(--now);opacity:.8}
+.bar .vals{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar .vals small{color:var(--muted)}
+@media (max-width:520px){.bar{grid-template-columns:minmax(90px,40%) 1fr 80px;font-size:12px}}
+
+/* Kaimiņvalstis */
+.nb-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:980px){.nb-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:620px){.nb-grid{grid-template-columns:1fr}}
+.nb{padding:14px 16px;border:1px solid var(--line);background:#fff;display:flex;flex-direction:column;gap:6px}
+.nb.lv{border-color:var(--sky);background:linear-gradient(#fff,#f0f9fc)}
+.nb .hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.nb .hd b{font-family:var(--serif);font-size:17px;color:var(--indigo)}
+.nb .hd span{font-size:12px;color:var(--muted)}
+.nb .def{font-size:12px;color:var(--muted);min-height:2.6em}
+.nb svg{width:100%;display:block}
+.nb .med{display:flex;gap:14px;font-size:12.5px;color:var(--ink-2);margin-top:2px;flex-wrap:wrap}
+.nb .med b{font-weight:700;color:var(--ink)}
+.nb details{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.nb summary{cursor:pointer;font-weight:700;color:var(--indigo);font-size:12.5px}
+.nb details p{margin:6px 0}
+.callout{padding:16px 18px;background:var(--surface-2);border-left:4px solid var(--sky);font-size:13.5px;color:var(--ink-2)}
+.callout ul{margin:6px 0 0;padding-left:18px}
+.callout li{margin:3px 0}
+
+/* Metodika */
+.defs{display:grid;grid-template-columns:1fr;gap:10px;margin:0;padding:0}
+.defs div{display:grid;grid-template-columns:200px 1fr;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.defs div:last-child{border-bottom:0}
+.defs dt{font-weight:700;margin:0;color:var(--indigo)}
+.defs dd{margin:0;color:var(--ink-2)}
+@media (max-width:600px){.defs div{grid-template-columns:1fr;gap:2px}}
+.srcs{margin:0;padding-left:18px;font-size:13px;color:var(--ink-2)}
+.srcs li{margin:4px 0;overflow-wrap:anywhere}
+.dl{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+footer{margin-top:36px;padding-top:22px;border-top:1px solid var(--line-2);display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-start}
+.flogo{height:34px;width:auto;flex:0 0 auto;opacity:.95}
+.ftext{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--muted);max-width:78ch}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-art" aria-hidden="true">
+    <svg viewBox="0 0 640 420" preserveAspectRatio="xMaxYMid slice" focusable="false">
+      <polygon points="300,0 640,0 640,420 470,420" fill="#251e50"/>
+      <polygon points="120,420 330,0 440,0 230,420" fill="#303a92"/>
+      <g fill="#1e1a48">
+        <rect x="486" y="0" width="14" height="300"/>
+        <rect x="516" y="0" width="14" height="262"/>
+        <rect x="546" y="0" width="14" height="224"/>
+        <rect x="576" y="0" width="14" height="186"/>
+        <rect x="606" y="0" width="14" height="148"/>
+      </g>
+      <polygon points="470,420 640,250 640,420" fill="#303a92"/>
+      <rect x="590" y="330" width="50" height="90" fill="#b1e5f2"/>
+    </svg>
+  </div>
+  <div class="wrap hero-in">
+    <div class="hero-top">
+      <a class="logo" href="https://providus.lv" target="_blank" rel="noopener"><img src="logo-white.png" alt="Providus domnīca" width="200" height="42"></a>
+      <span class="kicker">Interaktīvs rīks</span>
+    </div>
+    <h1>Pēc vēlēšanām: cik ilgi top valdība un budžets?</h1>
+    <p class="hero-lead">Saeimas vēlēšanas, valdības apstiprināšana un nākamā gada budžeta pieņemšana Latvijā kopš 1993. gada — un salīdzinājums ar kaimiņvalstīm. Izspēlē 2026./2027. gada scenārijus pats.</p>
+    <div class="stamp">Dati uz <b id="stampDate">07.11.2026</b><span class="sep"></span>šodien: <b id="stampToday"></b></div>
+  </div>
+  <nav class="tabs" aria-label="Sadaļas">
+    <div class="tablist wrap" role="tablist">
+      <button class="tab" role="tab" id="tab-parskats" aria-controls="parskats" aria-selected="true">2026: kur esam</button>
+      <button class="tab" role="tab" id="tab-vesture" aria-controls="vesture" aria-selected="false">Latvija 1993–2026</button>
+      <button class="tab" role="tab" id="tab-rezultati" aria-controls="rezultati" aria-selected="false">Vēlēšanu rezultāti</button>
+      <button class="tab" role="tab" id="tab-kaimini" aria-controls="kaimini" aria-selected="false">Kaimiņvalstis</button>
+      <button class="tab" role="tab" id="tab-metodika" aria-controls="metodika" aria-selected="false">Metodika un avoti</button>
+    </div>
+  </nav>
+</header>
+<main class="wrap main">
+  <!-- 1. Pārskats -->
+  <section class="panel on" id="parskats" role="tabpanel" aria-labelledby="tab-parskats">
+    <div class="grid kpi" id="kpis"></div>
+
+    <div class="card" style="margin-top:16px">
+      <h2>Kur šobrīd ir 2026. gada process</h2>
+      <p class="lead">15. Saeima ievēlēta 3. oktobrī. Valdības veidošana uzticēta Andrim Kulbergam (AS); 2027. gada budžets vēl nav ne iesniegts, ne pieņemts. Svītrotie soļi ir vēl priekšā — datumi tiem nav zināmi.</p>
+      <ol class="steps" id="steps"></ol>
+    </div>
+
+    <div class="card">
+      <h2>Izspēlē scenāriju: kad valdība, kad budžets?</h2>
+      <p class="lead">Izvēlies, kad Saeima varētu izteikt uzticību jaunajai valdībai un kad varētu pieņemt 2027. gada budžetu. Rīks parāda, kā šāds grafiks izskatītos uz visu desmit iepriekšējo ciklu fona (1993–2022). Tas ir salīdzinājums, nevis prognoze.</p>
+      <div class="scen">
+        <div class="ctl">
+          <div class="field">
+            <label for="govDate">Saeimas uzticības balsojums valdībai</label>
+            <input type="date" id="govDate" min="2026-11-07" max="2027-06-30" value="2026-11-18">
+            <div class="hint" id="govHint"></div>
+          </div>
+          <div class="field">
+            <label>2027. gada budžets pieņemts Saeimā</label>
+            <div class="chips" id="budChips"></div>
+            <input type="date" id="budDate" min="2026-11-07" max="2027-06-30" value="2026-12-23" style="margin-top:8px" aria-label="Cits budžeta pieņemšanas datums">
+            <div class="hint" id="budHint"></div>
+          </div>
+          <div class="field">
+            <label>Ko par to saka debatēs (06.11.2026)</label>
+            <div class="pos" id="positions" style="grid-template-columns:1fr"></div>
+          </div>
+        </div>
+        <div class="out" id="scenOut"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Vēsture -->
+  <section class="panel" id="vesture" role="tabpanel" aria-labelledby="tab-vesture" hidden>
+    <div class="card">
+      <h2>Desmit cikli: no vēlēšanu dienas līdz budžetam</h2>
+      <p class="lead">Katra josla ir viens Saeimas sasaukums. Tumši zilā daļa — laiks līdz Saeimas uzticības balsojumam pirmajai valdībai; gaiši zilā — no valdības līdz nākamā gada budžeta pieņemšanai galīgajā lasījumā. Aveņsarkanā atzīme — 1. janvāris, kad sākas budžeta gads. Uzvirzi kursoru vai izmanto Tab taustiņu, lai redzētu detaļas.</p>
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Skats">
+          <button type="button" data-view="days" aria-pressed="true">Dienas pēc vēlēšanām</button>
+          <button type="button" data-view="cal" aria-pressed="false">Kalendārs</button>
+        </div>
+        <label>Kārtot: <select id="sortSel">
+          <option value="chrono">hronoloģiski</option>
+          <option value="gov">pēc laika līdz valdībai</option>
+          <option value="bud">pēc laika līdz budžetam</option>
+          <option value="g2b">pēc posma valdība → budžets</option>
+        </select></label>
+        <label><input type="checkbox" id="showScen" checked> rādīt manu 2026. gada scenāriju</label>
+      </div>
+      <div class="legend"><span><i style="background:var(--gov)"></i>vēlēšanas → valdība</span><span><i style="background:var(--bud)"></i>valdība → budžets</span><span><i style="background:var(--now)"></i>1. janvāris</span><span><i style="background:repeating-linear-gradient(135deg,#ccc 0 2px,#fff 2px 4px)"></i>2026: process turpinās</span></div>
+      <div id="gantt"></div>
+    </div>
+    <div class="card">
+      <h2>Tabula: valdības, koalīcijas un budžeti</h2>
+      <p class="lead">Klikšķini uz kolonnas nosaukuma, lai kārtotu. Mandāti — koalīcijas partiju vēlēšanās iegūtie mandāti (no 100).</p>
+      <div class="tbl-wrap"><table id="lvTable"></table></div>
+      <p class="note">Avoti katrai rindai — ikonas „valdība / budžets / vēlēšanas”. Pilns saraksts sadaļā „Metodika un avoti”.</p>
+    </div>
+  </section>
+
+  <!-- 3. Rezultāti -->
+  <section class="panel" id="rezultati" role="tabpanel" aria-labelledby="tab-rezultati" hidden>
+    <div class="card">
+      <h2>Vēlēšanu rezultāti 1922–2026</h2>
+      <p class="lead">Izvēlies sasaukumu. Tumši zilās joslas — saraksti, kas ieguva mandātus; pelēkās — zem barjeras. Gaiši zilais punkts iezīmē partijas, kas veidoja pirmo valdību pēc vēlēšanām. Pārtrauktā aveņsarkanā līnija — vēlēšanu barjera.</p>
+      <div class="chips" id="saeimaChips"></div>
+      <div class="res-layout" style="margin-top:16px">
+        <div>
+          <h3 id="resTitle" style="margin-top:0"></h3>
+          <div class="bars" id="resBars"></div>
+          <p class="note" id="resNote"></p>
+        </div>
+        <div>
+          <div class="facts" id="resFacts"></div>
+          <div class="note" id="resCoal"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Ilgtermiņa tendences</h2>
+      <div class="toolbar">
+        <label>Rādītājs: <select id="trendSel">
+          <option value="turnout">vēlētāju aktivitāte, %</option>
+          <option value="winnerPct">uzvarētāja rezultāts, %</option>
+          <option value="winners">sarakstu skaits, kas ieguva mandātus</option>
+          <option value="lists">pieteikto sarakstu skaits</option>
+        </select></label>
+      </div>
+      <div id="trend"></div>
+      <p class="note">1934.–1993. gadā Saeimas vēlēšanas nenotika (autoritārais režīms un okupācija); 1993. gadā vēlēšanu barjera bija 4 %, kopš 1995. gada — 5 %. Avots: CVK.</p>
+    </div>
+  </section>
+
+  <!-- 4. Kaimiņvalstis -->
+  <section class="panel" id="kaimini" role="tabpanel" aria-labelledby="tab-kaimini" hidden>
+    <div class="card">
+      <h2>Kā tas notiek kaimiņos</h2>
+      <p class="lead">Trīs pēdējie vēlēšanu cikli katrā valstī. Mērogs visās kartītēs ir vienāds, tāpēc joslas var salīdzināt tieši. Taču ņem vērā: vēlēšanas notiek dažādos mēnešos (Igaunijā un Somijā pavasarī, Zviedrijā septembrī), tāpēc līdz 1. janvārim ir ļoti atšķirīgs laiks.</p>
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Skats">
+          <button type="button" data-nview="days" aria-pressed="true">Dienas pēc vēlēšanām</button>
+          <button type="button" data-nview="cal" aria-pressed="false">Kalendārs</button>
+        </div>
+      </div>
+      <div class="legend"><span><i style="background:var(--gov)"></i>vēlēšanas → valdība</span><span><i style="background:var(--bud)"></i>valdība → budžets</span><span><i style="background:var(--now)"></i>1. janvāris</span></div>
+      <div class="nb-grid" id="nbGrid" style="margin-top:10px"></div>
+    </div>
+    <div class="card">
+      <h2>Kopsavilkums: mediānas un noteikumi</h2>
+      <div class="tbl-wrap"><table id="nbTable"></table></div>
+      <div class="callout" style="margin-top:14px">
+        <b>Kā lasīt salīdzinājumu</b>
+        <ul>
+          <li>„Valdība izveidota” katrā valstī nozīmē citu juridisku soli: Latvijā un Polijā — parlamenta uzticības balsojums; Lietuvā — Seima balsojums par valdības programmu; Igaunijā — zvērests Riigikogu priekšā; Somijā — prezidenta iecelšana pēc premjera ievēlēšanas; Zviedrijā — Riksdāga balsojums par premjeru.</li>
+          <li>Zviedrijā budžetu var pieņemt arī bez jaunas valdības: 2018. gadā Riksdāgs pieņēma opozīcijas budžetu 37 dienas pirms valdības apstiprināšanas.</li>
+          <li>Polijā „budžets pieņemts” = pēdējais parlamenta balsojums (Sejms par Senāta labojumiem vai Senāts bez labojumiem); Sejma 3. lasījuma datums ir norādīts piezīmēs.</li>
+          <li>Lietuvā vēlēšanas notiek divās kārtās; dienas skaitītas no otrās kārtas.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Metodika -->
+  <section class="panel" id="metodika" role="tabpanel" aria-labelledby="tab-metodika" hidden>
+    <div class="card">
+      <h2>Metodika</h2>
+      <dl class="defs" id="defs"></dl>
+    </div>
+    <div class="card">
+      <h2>Avoti</h2>
+      <h3 style="margin-top:4px">Latvija: valdības un budžeti pa sasaukumiem</h3>
+      <ul class="srcs" id="srcLV"></ul>
+      <h3>Latvija: 2026. gada process un tiesiskais regulējums</h3>
+      <ul class="srcs" id="src2026"></ul>
+      <h3>Kaimiņvalstis</h3>
+      <ul class="srcs" id="srcNB"></ul>
+    </div>
+    <div class="card">
+      <h2>Lejupielādēt datus</h2>
+      <p class="lead">CSV faili ar visiem rīkā izmantotajiem datumiem — brīvai tālākai analīzei.</p>
+      <div class="dl">
+        <button class="btn" id="dlLV">Latvija 1993–2026 (CSV)</button>
+        <button class="btn" id="dlNB">Kaimiņvalstis (CSV)</button>
+        <button class="btn" id="dlRes">Vēlēšanu rezultāti 1922–2026 (CSV)</button>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <img class="flogo" src="logo-grey.png" alt="Providus domnīca" width="180" height="37">
+    <div class="ftext">
+      <span>© Providus, 2026. Dati: CVK, Saeima, Ministru kabinets, Finanšu ministrija, likumi.lv, kaimiņvalstu parlamentu un valdību vietnes.</span>
+      <span>Rīks ir aprakstošs: tas salīdzina faktiskos termiņus, nevis vērtē, kurš grafiks ir „pareizs”.</span>
+    </div>
+  </footer>
+</main>
+<div class="tip" id="tip" role="tooltip" aria-hidden="true"></div>
+<script src="data.js"></script>
+<script src="results.js"></script>
+<script src="app.js"></script>
+<script>
+(function(){
+  var q=new URLSearchParams(location.search);
+  if(q.get("embed")==="1"){document.documentElement.classList.add("embed");}
+  if(window.parent===window)return;
+  var last=0;
+  function send(){var h=document.documentElement.scrollHeight;if(Math.abs(h-last)<2)return;last=h;try{window.parent.postMessage({source:"providus-riks",id:"budzets",height:h},"*");}catch(e){}}
+  if("ResizeObserver" in window){new ResizeObserver(send).observe(document.body);}
+  window.addEventListener("load",send);setInterval(send,1500);
+})();
+</script>
+</body>
+</html>
